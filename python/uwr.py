@@ -54,7 +54,9 @@ def has_rr_type(msg_section, rdtype):
 
 
 def get_uri_records(host):
-    msg = qry.resolv("_http._tcp." + host, RR_URI)
+    msg = qry.resolv(host, RR_URI)
+    if msg.rcode() == 3:
+        msg = qry.resolv("_http._tcp." + host, RR_URI)
 
     if msg.rcode() == 3:
         if (domain := get_domain(msg)) is None:

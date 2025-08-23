@@ -22,8 +22,9 @@ class ResolverError(Exception):
     """ custom error """
 
 
-class Resolver:  # pylint: disable=too-few-public-methods
+class Resolver:
     """ build a DNS query & resolve it """
+
     def __init__(self, servers):
         self.next_id_item = 0
 

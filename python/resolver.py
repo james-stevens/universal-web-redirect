@@ -22,8 +22,9 @@ class ResolverError(Exception):
     """ custom error """
 
 
-class Resolver:  # pylint: disable=too-few-public-methods
+class Resolver:
     """ build a DNS query & resolve it """
+
     def __init__(self, servers):
         self.next_id_item = 0
 
@@ -102,7 +103,10 @@ class Resolver:  # pylint: disable=too-few-public-methods
 
                 reply, (addr, _) = self.sock.recvfrom(DNS_MAX_RESP)
                 if self.match_id(reply):
-                    return dns.message.from_wire(reply)
+                    try:
+                        return dns.message.from_wire(reply)
+                    except dns.exception.FormError:
+                        return None
 
             self.expiry += int(self.expiry / 2) if self.expiry > 2 else 1
             self.tries += 1

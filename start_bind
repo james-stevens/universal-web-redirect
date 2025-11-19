@@ -3,7 +3,7 @@
 #    (c) Copyright 2021-2023 JRCS Ltd - All Rights Reserved              #
 ##########################################################################
 
-base="/ram/named"
+base="/run/named"
 
 mkdir -p ${base} ${base}/etc
 mkdir -p ${base}/etc/bind ${base}/zones ${base}/var ${base}/var/run

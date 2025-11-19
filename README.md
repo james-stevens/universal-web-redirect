@@ -134,7 +134,7 @@ To run your own UWR node, simple run this container on a public IP Address, port
 You can either build this container from its soruce code by running `./dkmk` in this directory, or use the
 container `jamesstevens/universal-web-redirect` from `docker.com`.
 
-When you run the container the environment variable `REST_API_DIR` **MUST** be set to `/` and the environment variable `NAME_SERVERS`
+When you run the container the environment variable `NAME_SERVERS`
 must be set to a space separated list of the resolving name servers you wish the container to use.
 
 NOTE: for improved perfomance, the container internally runs a copy of ISC's `bind` DNS Resolver, but it is configured to **ONLY**

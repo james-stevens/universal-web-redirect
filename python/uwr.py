@@ -38,7 +38,8 @@ def get_uris(msg):
 
 
 def get_ttl(msg):
-	return max([rr.ttl for rr in msg.answer])
+    return max([rr.ttl for rr in msg.answer])
+
 
 def get_domain(msg):
     for rr in msg.authority:
@@ -47,40 +48,50 @@ def get_domain(msg):
                 return rr.name.to_text()
     return None
 
-def has_rr_type(msg_section,rdtype):
-    return any(rr.rdtype == rdtype for rr in msg_section for i in rr)
+
+def has_rr_type(msg_section, rdtype):
+    return (len(msg_section) > 0) and any(rr.rdtype == rdtype for rr in msg_section for i in rr)
+
+
+def got_answer(msg,rdtype):
+    if msg is None or msg.rcode() != 0:
+        return False
+    return has_rr_type(msg.answer,rdtype)
+
 
 def get_uri_records(host):
-    msg = qry.resolv("_http._tcp." + host, RR_URI)
+    msg = qry.resolv(host, RR_URI)
 
-    if msg.rcode() == 3:
-        if (domain := get_domain(msg)) is None:
-            return None, None
-        host = "_any."+domain
-        msg = qry.resolv("_http._tcp." + host, RR_URI)
+    if not got_answer(msg,RR_URI):
+        msg = qry.resolv("_http." + host, RR_URI)
 
-    if msg.rcode() != 0:
-        return None, None
+        if not got_answer(msg,RR_URI):
+            msg = qry.resolv("_http._tcp." + host, RR_URI)
 
-    if has_rr_type(msg.answer,RR_URI):
+            if not got_answer(msg,RR_URI):
+                if (domain := get_domain(msg)) is None:
+                    return None, None
+                msg = qry.resolv("_http._tcp._any" + domain, RR_URI)
+
+    if got_answer(msg,RR_URI):
         return get_ttl(msg), get_uris(msg)
 
-    msg = qry.resolv("_http._tcp." + host, RR_TXT)
-    if msg.rcode() == 0 and has_rr_type(msg.answer,RR_TXT):
-        return get_ttl(msg), get_uris(msg)
+    msg = qry.resolv(host, RR_TXT)
+    if got_answer(msg,RR_TXT):
+        msg = qry.resolv("_http._tcp." + host, RR_TXT)
+
+        if got_answer(msg,RR_TXT):
+            return get_ttl(msg), get_uris(msg)
 
     return None, None
 
 
 def redirect_user(request, text):
     host = None
-    if "X-Host" in request.headers:
-        host = request.headers["X-Host"]
-    elif "Host" in request.headers:
-        host = request.headers["Host"]
-    else:
+    if "Host" not in request.headers:
         return abort(499, "No host name header record found")
 
+    host = request.headers["Host"]
     if host.find(":") > 0:
         host = host.split(":")[0]
 
@@ -103,7 +114,6 @@ def redirect_user(request, text):
         if len(request.query_string) > 0:
             send_them_to = send_them_to + "?" + request.query_string.decode(
                 "utf-8")
-
 
     response = flask.redirect(send_them_to, code=redirect_code)
     response.headers['Cache-Control'] = f"max-age={ttl}"

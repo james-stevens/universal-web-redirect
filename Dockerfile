@@ -14,3 +14,5 @@ COPY start_bind /usr/local/bin
 
 COPY python /opt/python/
 RUN python3 -m compileall /opt/python
+
+COPY build.txt /usr/local/etc/build.txt

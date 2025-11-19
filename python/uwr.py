@@ -55,14 +55,14 @@ def has_rr_type(msg_section, rdtype):
 
 def get_uri_records(host):
     msg = qry.resolv(host, RR_URI)
+
     if msg.rcode() == 3:
         msg = qry.resolv("_http._tcp." + host, RR_URI)
 
     if msg.rcode() == 3:
         if (domain := get_domain(msg)) is None:
             return None, None
-        host = "_any." + domain
-        msg = qry.resolv("_http._tcp." + host, RR_URI)
+        msg = qry.resolv("_http._tcp._any" + domain, RR_URI)
 
     if msg.rcode() != 0:
         return None, None
@@ -70,7 +70,10 @@ def get_uri_records(host):
     if has_rr_type(msg.answer, RR_URI):
         return get_ttl(msg), get_uris(msg)
 
-    msg = qry.resolv("_http._tcp." + host, RR_TXT)
+    msg = qry.resolv(host, RR_TXT)
+    if msg.rcode() == 3:
+        msg = qry.resolv("_http._tcp." + host, RR_TXT)
+
     if msg.rcode() == 0 and has_rr_type(msg.answer, RR_TXT):
         return get_ttl(msg), get_uris(msg)
 

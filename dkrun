@@ -1,6 +1,7 @@
 #! /bin/sh
 
 docker run \
+	--read-only \
 	--env "NAME_SERVERS=192.168.8.43 192.168.8.33" \
 	--env "X_PYTHON_NAME_SERVERS=192.168.8.43 192.168.8.33" \
 	-v /opt/github/universal-web-redirect/python:/opt/python \

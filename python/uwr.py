@@ -50,32 +50,38 @@ def get_domain(msg):
 
 
 def has_rr_type(msg_section, rdtype):
-    return any(rr.rdtype == rdtype for rr in msg_section for i in rr)
+    return (len(msg_section) > 0) and any(rr.rdtype == rdtype for rr in msg_section for i in rr)
+
+
+def got_answer(msg,rdtype):
+    if msg is None or msg.rcode() != 0:
+        return False
+    return has_rr_type(msg.answer,rdtype)
 
 
 def get_uri_records(host):
     msg = qry.resolv(host, RR_URI)
 
-    if msg.rcode() == 3:
-        msg = qry.resolv("_http._tcp." + host, RR_URI)
+    if not got_answer(msg,RR_URI):
+        msg = qry.resolv("_http." + host, RR_URI)
 
-    if msg.rcode() == 3:
-        if (domain := get_domain(msg)) is None:
-            return None, None
-        msg = qry.resolv("_http._tcp._any" + domain, RR_URI)
+        if not got_answer(msg,RR_URI):
+            msg = qry.resolv("_http._tcp." + host, RR_URI)
 
-    if msg.rcode() != 0:
-        return None, None
+            if not got_answer(msg,RR_URI):
+                if (domain := get_domain(msg)) is None:
+                    return None, None
+                msg = qry.resolv("_http._tcp._any" + domain, RR_URI)
 
-    if has_rr_type(msg.answer, RR_URI):
+    if got_answer(msg,RR_URI):
         return get_ttl(msg), get_uris(msg)
 
     msg = qry.resolv(host, RR_TXT)
-    if msg.rcode() == 3:
+    if got_answer(msg,RR_TXT):
         msg = qry.resolv("_http._tcp." + host, RR_TXT)
 
-    if msg.rcode() == 0 and has_rr_type(msg.answer, RR_TXT):
-        return get_ttl(msg), get_uris(msg)
+        if got_answer(msg,RR_TXT):
+            return get_ttl(msg), get_uris(msg)
 
     return None, None
 

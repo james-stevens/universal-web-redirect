@@ -103,7 +103,10 @@ class Resolver:
 
                 reply, (addr, _) = self.sock.recvfrom(DNS_MAX_RESP)
                 if self.match_id(reply):
-                    return dns.message.from_wire(reply)
+                    try:
+                        return dns.message.from_wire(reply)
+                    except dns.exception.FormError:
+                        return None
 
             self.expiry += int(self.expiry / 2) if self.expiry > 2 else 1
             self.tries += 1
